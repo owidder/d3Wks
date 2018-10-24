@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Workshop</title>
+
+    <script src="lib/d3.v4.js"></script>
+
+    <style>
+        circle {
+            fill: transparent;
+            stroke: black;
+            stroke-width: 2px;
+            opacity: .5;        }
+    </style>
+</head>
+<body>
+
+
+<div id="svgcontainer"></div>
+
+<script>
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const svg = d3.select("#svgcontainer")
+        .append("svg")
+        .attr("height", height)
+        .attr("width", width);
+
+    function render(data) {
+        const selection = svg.selectAll("circle")
+            .data(data, function (d) {
+                return d.name;
+            });
+
+        selection.enter()
+            .append("circle")
+            .attr("cx", innerWidth/2)
+            .attr("cy", innerHeight/2)
+            .attr("r", 10)
+            .merge(selection)
+            .transition()
+            .duration(1000)
+            .attr("cx", function (d) {
+                return d.x;
+            })
+            .attr("cy", function (d) {
+                return d.y;
+            })
+            .attr("r", function (d) {
+                return d.r;
+            })
+            .style("fill", function (d) {
+                return d.color;
+            });
+
+        selection.exit()
+            .transition()
+            .duration(500)
+            .attr("r", 0)
+            .style("opacity", 0)
+            .remove();
+
+    }
+
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory20);
+
+    setInterval(function () {
+        const data = [];
+
+        for(let i = 0; i < 20; i++) {
+            if(Math.random() > .1) {
+                data.push({
+                    name: i,
+                    x: Math.floor(d3.randomUniform(0,innerWidth)()),
+                    y: Math.floor(d3.randomUniform(0,innerHeight)()),
+                    r: Math.floor(d3.randomUniform(0,50)()),
+                    color: colorScale(i)
+                })
+            }
+        }
+
+        render(data)
+    }, 1000)</script>
+
+</body>
+</html>
