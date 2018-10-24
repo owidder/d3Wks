@@ -34,6 +34,11 @@
         .btn-floating {
             margin: 1em;
         }
+
+        text.bar {
+            font-size: .7em;
+            transform: translateY(-10px);
+        }
     </style>
 </head>
 <body>
@@ -51,11 +56,12 @@
     const height = window.innerHeight;
 
     const BAR_OFFSET_X = 100;
-    const BAR_OFFSET_Y = 100;
-    const BAR_WIDTH = 50;
+    const BAR_BOTTOM_OFFSET = 100;
+    const BAR_TOP_OFFSET = 100;
+    const BAR_WIDTH = 100;
     const BAR_GAP = 10;
     const INITIAL_BAR_HEIGHT = 50;
-    const BAR_BASELINE = height - BAR_OFFSET_Y;
+    const BAR_BASELINE = height - BAR_BOTTOM_OFFSET;
 
     const svg = d3.select("#svgcontainer")
         .append("svg")
@@ -126,29 +132,38 @@
 
         const yFunc = d3.scaleLinear()
             .domain([0, maxWg])
-            .range([BAR_BASELINE, 20]);
+            .range([BAR_BASELINE, BAR_TOP_OFFSET]);
         const heightFunc = d3.scaleLinear()
             .domain([0, maxWg])
-            .range([0, BAR_BASELINE - 20]);
+            .range([0, BAR_BASELINE - BAR_TOP_OFFSET]);
 
         const t = axisRoot.transition().duration(1000);
         t.selectAll(".axis")
             .call(d3.axisLeft(yFunc));
 
-        selection.enter()
+        const enterG = selection.enter()
             .append("g")
             .attr("class", "bar")
             .attr("transform", function(d) {
                 const x = d.index * (BAR_WIDTH + BAR_GAP) + BAR_OFFSET_X;
                 const y = BAR_BASELINE - INITIAL_BAR_HEIGHT;
                 return "translate(" + x + "," + y + ")";
-            })
+            });
+
+        enterG
             .append("rect")
             .attr("class", "bar")
             .attr("width", BAR_WIDTH)
             .attr("height", INITIAL_BAR_HEIGHT)
             .style("fill", function (d) {
                 return colorScale(d.title);
+            });
+
+        enterG
+            .append("text")
+            .attr("class", "bar")
+            .text(function (d) {
+                return d.title;
             });
 
         svg.selectAll("g.bar")
