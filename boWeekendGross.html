@@ -70,6 +70,11 @@
     let sortedWeeks = [];
     let currentWeek = -1;
     d3.json("data/bo.json", function (weekData) {
+        weekData.forEach(function (week) {
+            week.forEach(function (film, index) {
+                film.index = index;
+            })
+        });
         sortedWeeks = weekData.sort(function (weekA, weekB) {
             return d3.ascending(weekA[0].date, weekB[0].date);
         });
@@ -105,7 +110,12 @@
 
     function render() {
         const weekData = sortedWeeks[currentWeek].slice(0, 10);
-        const selection = svg.selectAll("rect")
+        const selection = svg.selectAll("g.bar")
+            .data(weekData, function (d) {
+                return d.title;
+            });
+
+        svg.selectAll("rect.bar")
             .data(weekData, function (d) {
                 return d.title;
             });
@@ -126,25 +136,33 @@
             .call(d3.axisLeft(yFunc));
 
         selection.enter()
-            .append("rect")
-            .attr("x", function(d, i) {
-                return i * (BAR_WIDTH + BAR_GAP) + BAR_OFFSET_X;
+            .append("g")
+            .attr("class", "bar")
+            .attr("transform", function(d) {
+                const x = d.index * (BAR_WIDTH + BAR_GAP) + BAR_OFFSET_X;
+                const y = BAR_BASELINE - INITIAL_BAR_HEIGHT;
+                return "translate(" + x + "," + y + ")";
             })
-            .attr("y", BAR_BASELINE - INITIAL_BAR_HEIGHT)
+            .append("rect")
+            .attr("class", "bar")
             .attr("width", BAR_WIDTH)
             .attr("height", INITIAL_BAR_HEIGHT)
             .style("fill", function (d) {
                 return colorScale(d.title);
-            })
-            .merge(selection)
+            });
+
+        svg.selectAll("g.bar")
             .transition()
             .duration(1000)
-            .attr("x", function(d, i) {
-                return i * (BAR_WIDTH + BAR_GAP) + BAR_OFFSET_X;
-            })
-            .attr("y", function (d) {
-                return yFunc(d.wg);
-            })
+            .attr("transform", function(d) {
+                const x = d.index * (BAR_WIDTH + BAR_GAP) + BAR_OFFSET_X;
+                const y = yFunc(d.wg);
+                return "translate(" + x + "," + y + ")";
+            });
+
+        svg.selectAll("rect.bar")
+            .transition()
+            .duration(1000)
             .attr("height", function (d) {
                 return heightFunc(d.wg);
             });
