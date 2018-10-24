@@ -50,16 +50,22 @@
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    const BAR_OFFSET_Y = 20;
+    const BAR_OFFSET_X = 100;
+    const BAR_OFFSET_Y = 100;
     const BAR_WIDTH = 50;
+    const BAR_GAP = 10;
     const INITIAL_BAR_HEIGHT = 50;
-    const BAR_BASELINE_OFFSET = 100;
-    const BAR_BASELINE = height - BAR_BASELINE_OFFSET;
+    const BAR_BASELINE = height - BAR_OFFSET_Y;
 
     const svg = d3.select("#svgcontainer")
         .append("svg")
         .attr("height", height)
         .attr("width", width);
+
+    const axisRoot = svg.append("g");
+    axisRoot.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(" + (BAR_OFFSET_X - 10) + ",0)");
 
     let sortedWeeks = [];
     let currentWeek = -1;
@@ -95,8 +101,6 @@
         }
     }
 
-    const heightScale = d3.scaleLinear().range([0, height/2]);
-
     const colorScale = d3.scaleOrdinal(d3.schemeCategory20);
 
     function render() {
@@ -109,12 +113,22 @@
         const maxWg = d3.max(weekData, function (d) {
             return d.wg;
         });
-        heightScale.domain([0, maxWg]);
+
+        const yFunc = d3.scaleLinear()
+            .domain([0, maxWg])
+            .range([BAR_BASELINE, 20]);
+        const heightFunc = d3.scaleLinear()
+            .domain([0, maxWg])
+            .range([0, BAR_BASELINE - 20]);
+
+        const t = axisRoot.transition().duration(1000);
+        t.selectAll(".axis")
+            .call(d3.axisLeft(yFunc));
 
         selection.enter()
             .append("rect")
             .attr("x", function(d, i) {
-                return i * (BAR_WIDTH + BAR_OFFSET_Y);
+                return i * (BAR_WIDTH + BAR_GAP) + BAR_OFFSET_X;
             })
             .attr("y", BAR_BASELINE - INITIAL_BAR_HEIGHT)
             .attr("width", BAR_WIDTH)
@@ -126,13 +140,13 @@
             .transition()
             .duration(1000)
             .attr("x", function(d, i) {
-                return i * (BAR_WIDTH + BAR_OFFSET_Y);
+                return i * (BAR_WIDTH + BAR_GAP) + BAR_OFFSET_X;
             })
             .attr("y", function (d) {
-                return BAR_BASELINE  - heightScale(d.wg);
+                return yFunc(d.wg);
             })
             .attr("height", function (d) {
-                return heightScale(d.wg);
+                return heightFunc(d.wg);
             });
 
         selection.exit()
