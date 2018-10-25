@@ -31,8 +31,12 @@
             justify-content: flex-end;
         }
 
-        .btn-floating {
+        .control {
             margin: 1em;
+        }
+
+        .weekctr {
+            font-size: 2em;
         }
 
         text.bar {
@@ -43,13 +47,14 @@
 </head>
 <body>
 
-<div id="svgcontainer"></div>
 <div class="screen">
     <div class="controls">
-        <a class="btn-floating btn-large waves-effect waves-light blue" onclick="prev()"><i class="material-icons">skip_previous</i></a>
-        <a class="btn-floating btn-large waves-effect waves-light blue" onclick="next()"><i class="material-icons">skip_next</i></a>
+        <div class="weekctr control"></div>
+        <a class="control btn-floating btn-large waves-effect waves-light blue" onclick="prev()"><i class="material-icons">skip_previous</i></a>
+        <a class="control btn-floating btn-large waves-effect waves-light blue" onclick="next()"><i class="material-icons">skip_next</i></a>
     </div>
 </div>
+<div id="svgcontainer"></div>
 
 <script>
     const width = window.innerWidth;
@@ -84,6 +89,8 @@
         sortedWeeks = weekData.sort(function (weekA, weekB) {
             return d3.ascending(weekA[0].date, weekB[0].date);
         });
+
+        next();
     });
 
     function next() {
@@ -94,6 +101,8 @@
             else {
                 currentWeek = 0;
             }
+
+            d3.select(".weekctr").text(sortedWeeks[currentWeek][0].date);
 
             render();
         }
@@ -108,6 +117,8 @@
                 currentWeek = sortedWeeks.length;
             }
 
+            d3.select(".weekctr").text(sortedWeeks[currentWeek][0].date);
+
             render();
         }
     }
@@ -116,6 +127,7 @@
 
     function render() {
         const weekData = sortedWeeks[currentWeek].slice(0, 10);
+
         const selection = svg.selectAll("g.bar")
             .data(weekData, function (d) {
                 return d.title;
@@ -130,16 +142,17 @@
             return d.wg;
         });
 
-        const yFunc = d3.scaleLinear()
+        const yScale = d3.scaleLinear()
             .domain([0, maxWg])
             .range([BAR_BASELINE, BAR_TOP_OFFSET]);
-        const heightFunc = d3.scaleLinear()
+
+        const heightScale = d3.scaleLinear()
             .domain([0, maxWg])
             .range([0, BAR_BASELINE - BAR_TOP_OFFSET]);
 
-        const t = axisRoot.transition().duration(1000);
-        t.selectAll(".axis")
-            .call(d3.axisLeft(yFunc));
+        axisRoot.transition().duration(1000)
+            .selectAll(".axis")
+            .call(d3.axisLeft(yScale));
 
         const enterG = selection.enter()
             .append("g")
@@ -171,7 +184,7 @@
             .duration(1000)
             .attr("transform", function(d) {
                 const x = d.index * (BAR_WIDTH + BAR_GAP) + BAR_OFFSET_X;
-                const y = yFunc(d.wg);
+                const y = yScale(d.wg);
                 return "translate(" + x + "," + y + ")";
             });
 
@@ -179,7 +192,7 @@
             .transition()
             .duration(1000)
             .attr("height", function (d) {
-                return heightFunc(d.wg);
+                return heightScale(d.wg);
             });
 
         selection.exit()
@@ -189,7 +202,6 @@
             .remove();
 
     }
-
 
 </script>
 
